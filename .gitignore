@@ -1,2 +1,16 @@
-venv/
+# Ignorar o arquivo de variáveis de ambiente
 .env
+
+# Ignorar a pasta do ambiente virtual
+venv/
+
+# Ignorar arquivos de compilação
+*.pyc
+__pycache__/
+
+# Ignorar arquivos de logs
+*.log
+
+# Ignorar arquivos do sistema
+.DS_Store
+Thumbs.db
