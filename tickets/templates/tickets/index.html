@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static "base.css" %}">
+{% endblock style %}
+
+{% block body %}
+<h1>Tickets</h1>
+<div id="ticket-container" class="ticket-container"></div>
+
+<script>
+   const ticketContainer = document.getElementById('ticket-container');
+   const socket = new WebSocket('ws://localhost:8000/ws/api/tickets');
+
+   socket.onmessage = function (e) {
+      const data = JSON.parse(e.data);
+      const tickets = data.tickets;
+      ticketContainer.innerHTML = '';
+      tickets.forEach(ticket => {
+         const card = document.createElement('div');
+         card.className = 'ticket-card';
+         card.innerHTML = `
+            <h2>Number: ${ticket.number}</h2>
+            <p><strong>Description:</strong> ${ticket.short_description}</p>
+            <p><strong>Urgency:</strong> ${ticket.urgency}</p>
+            <p><strong>Updated By:</strong> ${ticket.sys_updated_by}</p>
+            <p><strong>Link:</strong> <a href="${ticket.link}" target="_blank">${ticket.link}</a></p>
+         `;
+         ticketContainer.appendChild(card);
+      });
+   };
+
+   socket.onclose = function (e) {
+      console.error('WebSocket closed unexpectedly');
+   };
+</script>
+
+{% endblock body %}
