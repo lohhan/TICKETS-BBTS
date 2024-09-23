@@ -6,34 +6,70 @@
 {% endblock style %}
 
 {% block body %}
-<h1>Tickets</h1>
+<h1>Service now</h1>
 <div id="ticket-container" class="ticket-container"></div>
 
+<div id="ticket-modal" class="modal">
+   <div class="modal-content">
+       <span class="close">&times;</span>
+       <h2 id="modal-number"></h2>
+       <p><strong>Descrição:</strong> <span id="modal-description"></span></p>
+       <p><strong>Prioridade:</strong> <span id="modal-priority"></span></p>
+       <p><strong>Categoria:</strong> <span id="modal-category"></span></p>
+       <p><strong>Updated By:</strong> <span id="modal-updated-by"></span></p>
+       <p><strong>Data de Criação:</strong> <span id="modal-created-on"></span></p>
+       <p><strong>Link:</strong> <a id="modal-link" target="_blank"></a></p>
+   </div>
+</div>
+
 <script>
-   const ticketContainer = document.getElementById('ticket-container');
-   const socket = new WebSocket('ws://localhost:8000/ws/api/tickets');
+  const ticketContainer = document.getElementById('ticket-container');
+  const modal = document.getElementById('ticket-modal');
+  const closeModal = document.getElementsByClassName('close')[0];
 
-   socket.onmessage = function (e) {
-      const data = JSON.parse(e.data);
-      const tickets = data.tickets;
-      ticketContainer.innerHTML = '';
-      tickets.forEach(ticket => {
-         const card = document.createElement('div');
-         card.className = 'ticket-card';
-         card.innerHTML = `
-            <h2>Number: ${ticket.number}</h2>
-            <p><strong>Description:</strong> ${ticket.short_description}</p>
-            <p><strong>Urgency:</strong> ${ticket.urgency}</p>
-            <p><strong>Updated By:</strong> ${ticket.sys_updated_by}</p>
-            <p><strong>Link:</strong> <a href="${ticket.link}" target="_blank">${ticket.link}</a></p>
-         `;
-         ticketContainer.appendChild(card);
-      });
-   };
+  const socket = new WebSocket('ws://localhost:8000/ws/api/tickets');
 
-   socket.onclose = function (e) {
-      console.error('WebSocket closed unexpectedly');
-   };
+  socket.onmessage = function (e) {
+     const data = JSON.parse(e.data);
+     const tickets = data.tickets;
+     ticketContainer.innerHTML = '';
+     tickets.forEach(ticket => {
+        const card = document.createElement('div');
+        card.className = 'ticket-card';
+        card.innerHTML = `
+           <h2>Número: ${ticket.number}</h2>
+           <p><strong>Descrição:</strong> ${ticket.short_description}</p>
+           <p><strong>Prioridade:</strong> ${ticket.priority}</p>
+           <p><strong>Data de Criação:</strong> ${new Date(ticket.sys_created_on).toLocaleString()}</p>
+        `;
+        card.onclick = function() {
+           document.getElementById('modal-number').innerText = `Número: ${ticket.number}`;
+           document.getElementById('modal-description').innerText = ticket.short_description;
+           document.getElementById('modal-priority').innerText = ticket.priority;
+           document.getElementById('modal-category').innerText = ticket.category;
+           document.getElementById('modal-updated-by').innerText = ticket.sys_updated_by;
+           document.getElementById('modal-created-on').innerText = ticket.sys_created_on;
+           document.getElementById('modal-link').innerText = ticket.link;
+           document.getElementById('modal-link').href = ticket.link;
+           modal.style.display = "block";
+        };
+        ticketContainer.appendChild(card);
+     });
+  };
+
+  closeModal.onclick = function() {
+     modal.style.display = "none";
+  };
+
+  window.onclick = function(event) {
+     if (event.target == modal) {
+        modal.style.display = "none";
+     }
+  };
+
+  socket.onclose = function (e) {
+     console.error('WebSocket closed unexpectedly');
+  };
 </script>
 
 {% endblock body %}

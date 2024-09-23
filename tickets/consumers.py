@@ -19,23 +19,27 @@ class TicketConsumer(AsyncWebsocketConsumer):
             'sysparm_query': 'state!=7',  # Exclui tickets fechados
             'sysparm_limit': '10',  # Limita o número de resultados a 10
             'sysparm_sortby': 'sys_created_on',  # Ordena por data de criação
+            'sysparm_orderby': 'DESC'  # Ordena do mais recente para o mais antigo
         }
 
         user_acess = os.getenv("USER_ACESS")
         password = os.getenv("PASSWORD")
 
-        url = 'https://dev229526.service-now.com/api/now/table/incident'
+        url = 'https://dev282633.service-now.com/api/now/table/incident'
 
         try:
             response = requests.get(url, auth=HTTPBasicAuth(user_acess, password), params=query_params)
             response.raise_for_status()  
             tickets = response.json().get('result', [])
+            base_url = "https://dev282633.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number="
         except requests.exceptions.RequestException as e:
             print(f"Erro ao obter tickets: {e}")
             tickets = []
 
         filtered_tickets = [
-            {key: ticket[key] for key in ["number", "sys_id", "short_description", "urgency", "sys_updated_by", "sys_updated_on"]}
+            {
+                **{key: ticket[key] for key in ["number", "sys_id", "short_description", "priority", "category", "sys_updated_by", "sys_updated_on", "sys_created_on"]}, 'link': f"{base_url}{ticket['number']}"  
+            }
             for ticket in tickets
         ]
 
