@@ -1,4 +1,3 @@
-import json
 from ninja import NinjaAPI
 import requests
 from requests.auth import HTTPBasicAuth
@@ -7,6 +6,8 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 
 api = NinjaAPI()
+
+tickets_cache = []
 
 load_dotenv()
 
@@ -38,9 +39,17 @@ def fetch_tickets():
 
     return filtered_tickets
 
-# Endpoint RESTful para retornar tickets
+def update_tickets():
+    global tickets_cache
+    tickets_cache = fetch_tickets()
+    print("Tickets atualizados com sucesso.")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(update_tickets, 'interval', seconds=60)
+scheduler.start()
+
+update_tickets()
+
 @api.get("/tickets")
 def get_tickets(request):
-    tickets = fetch_tickets()
-    return tickets
-
+    return tickets_cache 

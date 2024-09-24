@@ -6,7 +6,7 @@
 {% endblock style %}
 
 {% block body %}
-<h1>Service now</h1>
+<h1>Service Now</h1>
 <div id="ticket-container" class="ticket-container"></div>
 
 <div id="ticket-modal" class="modal">
@@ -27,36 +27,46 @@
   const modal = document.getElementById('ticket-modal');
   const closeModal = document.getElementsByClassName('close')[0];
 
-  const socket = new WebSocket('ws://localhost:8000/ws/api/tickets');
+  // Função para carregar os tickets
+  function loadTickets() {
+     fetch('/api/tickets')
+        .then(response => response.json())
+        .then(data => {
+           const tickets = data;
+           ticketContainer.innerHTML = '';
+           tickets.forEach(ticket => {
+              const card = document.createElement('div');
+              card.className = 'ticket-card';
+              card.innerHTML = `
+                 <h2>Número: ${ticket.number}</h2>
+                 <p><strong>Descrição:</strong> ${ticket.short_description}</p>
+                 <p><strong>Prioridade:</strong> ${ticket.priority}</p>
+                 <p><strong>Data de Criação:</strong> ${new Date(ticket.sys_created_on).toLocaleString()}</p>
+              `;
+              card.onclick = function() {
+                 document.getElementById('modal-number').innerText = `Número: ${ticket.number}`;
+                 document.getElementById('modal-description').innerText = ticket.short_description;
+                 document.getElementById('modal-priority').innerText = ticket.priority;
+                 document.getElementById('modal-category').innerText = ticket.category;
+                 document.getElementById('modal-updated-by').innerText = ticket.sys_updated_by;
+                 document.getElementById('modal-created-on').innerText = ticket.sys_created_on;
+                 document.getElementById('modal-link').innerText = ticket.link;
+                 document.getElementById('modal-link').href = ticket.link;
+                 modal.style.display = "block";
+              };
+              ticketContainer.appendChild(card);
+           });
+        })
+        .catch(error => console.error('Erro ao carregar tickets:', error));
+  }
 
-  socket.onmessage = function (e) {
-     const data = JSON.parse(e.data);
-     const tickets = data.tickets;
-     ticketContainer.innerHTML = '';
-     tickets.forEach(ticket => {
-        const card = document.createElement('div');
-        card.className = 'ticket-card';
-        card.innerHTML = `
-           <h2>Número: ${ticket.number}</h2>
-           <p><strong>Descrição:</strong> ${ticket.short_description}</p>
-           <p><strong>Prioridade:</strong> ${ticket.priority}</p>
-           <p><strong>Data de Criação:</strong> ${new Date(ticket.sys_created_on).toLocaleString()}</p>
-        `;
-        card.onclick = function() {
-           document.getElementById('modal-number').innerText = `Número: ${ticket.number}`;
-           document.getElementById('modal-description').innerText = ticket.short_description;
-           document.getElementById('modal-priority').innerText = ticket.priority;
-           document.getElementById('modal-category').innerText = ticket.category;
-           document.getElementById('modal-updated-by').innerText = ticket.sys_updated_by;
-           document.getElementById('modal-created-on').innerText = ticket.sys_created_on;
-           document.getElementById('modal-link').innerText = ticket.link;
-           document.getElementById('modal-link').href = ticket.link;
-           modal.style.display = "block";
-        };
-        ticketContainer.appendChild(card);
-     });
-  };
+  // Carrega os tickets quando a página é carregada
+  loadTickets();
 
+  // Atualiza os tickets a cada 60 segundos
+  setInterval(loadTickets, 60000);
+
+  // Fechar o modal
   closeModal.onclick = function() {
      modal.style.display = "none";
   };
@@ -65,10 +75,6 @@
      if (event.target == modal) {
         modal.style.display = "none";
      }
-  };
-
-  socket.onclose = function (e) {
-     console.error('WebSocket closed unexpectedly');
   };
 </script>
 
