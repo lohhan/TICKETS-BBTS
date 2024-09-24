@@ -25,9 +25,9 @@ PASSWORD = xxx
 
 ## 4. Rodar o Servidor
 
-Utilize o uvicorn para rodar a aplicação:
+Utilize python manage.py runserver para rodar o servidor:
 
 ```bash
-uvicorn core.asgi:application --reload
+python manage.py runserver
 ```
 
