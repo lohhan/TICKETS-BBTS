@@ -11,9 +11,9 @@ tickets_cache = [] # criando uma lista de cache
 
 load_dotenv() # carregando as credenciais do .env
 
-def fetch_tickets(): # função que busca os tickets
+def fetch_service_now(): 
     query_params = {
-        'sysparm_query': 'state!=7',  
+        'sysparm_query': 'state!=7^state!=8^state!=9',  
         'sysparm_sortby': 'sys_created_on',  
         'sysparm_orderby': 'DESC'  
     } # parametros de pesquisa
@@ -39,10 +39,14 @@ def fetch_tickets(): # função que busca os tickets
 
     return filtered_tickets
 
+def fetch_tickets(): 
+    global tickets_cache
+    tickets_cache = [] 
+    tickets_cache += fetch_service_now()
+
 # atualiza os tickets a cada 60s
 def update_tickets(): 
-    global tickets_cache
-    tickets_cache = fetch_tickets()
+    fetch_tickets()
     print("Tickets atualizados com sucesso.")
 
 scheduler = BackgroundScheduler()
